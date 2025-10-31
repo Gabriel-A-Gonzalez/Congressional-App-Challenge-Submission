@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composting Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #dbeafe, #d1fae5);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Title Page Styles */
+        .title-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 90vh;
+            text-align: center;
+        }
+
+        .logo-container {
+            width: 200px;
+            height: 200px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            font-size: 80px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-container:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-upload-hint {
+            position: absolute;
+            bottom: 10px;
+            font-size: 12px;
+            color: #6b7280;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .title-input {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #065f46;
+            margin-bottom: 20px;
+            border: 2px solid transparent;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-align: center;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            max-width: 90%;
+        }
+
+        .title-input:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #059669;
+        }
+
+        .title-input:focus {
+            outline: none;
+            background: white;
+            border-color: #059669;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #047857;
+            margin-bottom: 50px;
+        }
+
+        .start-button {
+            background-color: #059669;
+            color: white;
+            padding: 20px 50px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        .start-button:hover {
+            background-color: #047857;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(5, 150, 105, 0.5);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* Main Game Styles */
+        .game-screen {
+            display: none;
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        h1 {
+            text-align: center;
+            color: #065f46;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #6b7280;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .back-button:hover {
+            background-color: #4b5563;
+        }
+
+        .time-control {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .sun-track {
+            position: relative;
+            width: 100%;
+            height: 64px;
+            background: linear-gradient(to right, #fed7aa, #bfdbfe, #c4b5fd);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .sun {
+            position: absolute;
+            top: 8px;
+            width: 48px;
+            height: 48px;
+            font-size: 48px;
+            transition: left 1s;
+            transform: translateX(-50%);
+        }
+
+        .week-display {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .button {
+            background-color: #2563eb;
+            color: white;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 8px;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .button.danger {
+            background-color: #dc2626;
+        }
+
+        .button.danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 24px;
+        }
+
+        .materials-panel {
+            width: 280px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .materials-panel h2 {
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .materials-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .material-item {
+            padding: 12px;
+            border-radius: 8px;
+            cursor: grab;
+            text-align: center;
+            transition: transform 0.2s;
+            border: 2px solid;
+        }
+
+        .material-item:active {
+            cursor: grabbing;
+        }
+
+        .material-item:hover {
+            transform: scale(1.05);
+        }
+
+        .material-item.green {
+            background-color: #dcfce7;
+            border-color: #86efac;
+        }
+
+        .material-item.brown {
+            background-color: #fef3c7;
+            border-color: #fcd34d;
+        }
+
+        .material-item.accelerator {
+            background-color: #f3e8ff;
+            border-color: #c084fc;
+        }
+
+        .material-item.non-compostable {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .material-emoji {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+
+        .material-name {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .material-percent {
+            font-size: 11px;
+            color: #059669;
+            font-weight: bold;
+        }
+
+        .legend {
+            margin-top: 24px;
+        }
+
+        .legend h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 8px;
+        }
+
+        .right-panel {
+            flex: 1;
+        }
+
+        .controls-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .control-group label {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .control-icon {
+            margin-right: 8px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .bin-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .bin-panel h2 {
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .compost-bin {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to bottom, #fffbeb, #fef3c7);
+            border: 4px solid #fcd34d;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bin-border {
+            position: absolute;
+            inset: 8px;
+            border: 2px dashed #fcd34d;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f59e0b;
+            pointer-events: none;
+        }
+
+        .empty-message {
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .bin-item {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: white;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bin-item:hover {
+            transform: scale(1.1);
+            border-color: #ef4444;
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .bin-item-emoji {
+            font-size: 28px;
+        }
+
+        .bin-item-percent {
+            font-size: 10px;
+            font-weight: bold;
+            color: #059669;
+            margin-top: 2px;
+        }
+
+        .bin-info {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #4b5563;
+        }
+
+        .warning {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .popup {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .popup-icon {
+            margin-right: 8px;
+            font-size: 24px;
+        }
+
+        .popup h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .popup-message {
+            color: #374151;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .popup-recommendations {
+            margin-bottom: 16px;
+        }
+
+        .popup-recommendations h4 {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .popup-recommendations ul {
+            list-style: disc;
+            padding-left: 20px;
+            color: #4b5563;
+            font-size: 14px;
+        }
+
+        .popup-recommendations li {
+            margin-bottom: 4px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Victory Popup Styles */
+        .victory-popup {
+            background: linear-gradient(135deg, #fef3c7 0%, #d1fae5 100%);
+            border: 4px solid #059669;
+        }
+
+        .victory-icon {
+            font-size: 64px;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: celebrate 1s ease-in-out;
+        }
+
+        @keyframes celebrate {
+
+            0%,
+            100% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            25% {
+                transform: rotate(-10deg) scale(1.1);
+            }
+
+            75% {
+                transform: rotate(10deg) scale(1.1);
+            }
+        }
+
+        .victory-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #065f46;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .victory-stats {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .victory-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .victory-stat:last-child {
+            border-bottom: none;
+        }
+
+        .victory-stat-label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .victory-stat-value {
+            color: #059669;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <!--This is the container where all the magic happens-->
+    <div class="container">
+        <!-- Title Page -->
+        <div class="title-page" id="titlePage">
+            <div class="logo-container" onclick="document.getElementById('logoUpload').click()">
+                <span id="logoDisplay">🌱</span>
+                <div class="logo-upload-hint"></div>
+                <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="uploadLogo(event)">
+            </div>
+
+            <input type="text" class="title-input" id="gameTitle" value="Composting Simulator"
+                placeholder="Enter Game Title">
+
+            <div class="subtitle">Learn the science of composting!</div>
+
+            <button class="start-button" onclick="startGame()">
+                Start Composting 🌿
+            </button>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <button class="back-button" onclick="backToTitle()">← Back to Title</button>
+
+            <h1 id="gameHeader">Composting Simulator</h1>
+
+            <div class="time-control">
+                <div class="sun-track">
+                    <div class="sun" id="sun">☀️</div>
+                    <div class="week-display" id="weekDisplay">Week 0</div>
+                </div>
+                <button class="button" onclick="advanceTime()">⏰ Advance Time (1 Week)</button>
+                <button class="button danger" onclick="clearBin()">Clear Bin</button>
+            </div>
+
+            <div class="main-content">
+                <div class="materials-panel">
+                    <h2>Materials</h2>
+                    <div class="materials-grid" id="materialsGrid"></div>
+                    <!--This is where the apples, newspapers, broccolis, etc. appear-->
+                    <div class="legend">
+                        <h3>Legend:</h3>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #86efac;"></div>
+                            <span>Greens (Nitrogen)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #fcd34d;"></div>
+                            <span>Browns (Carbon)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #c084fc;"></div>
+                            <span>Accelerators</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #d1d5db;"></div>
+                            <span>Non-compostable</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="controls-panel">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <label>
+                                    <span class="control-icon">💧</span>
+                                    <span>Moisture: <span id="moistureValue">50</span>%</span>
+                                </label>
+                                <input type="range" id="moistureSlider" min="0" max="100" value="50"
+                                    oninput="updateMoisture(this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>
+                                    <span class="control-icon">☀️</span>
+                                    <span>Temperature/Light: <span id="sunlightValue">50</span>%</span>
+                                </label>
+                                <input type="range" id="sunlightSlider" min="0" max="100" value="50"
+                                    oninput="updateSunlight(this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bin-panel">
+                        <h2>Compost Bin</h2>
+                        <div class="compost-bin" id="compostBin" ondragover="allowDrop(event)" ondrop="dropItem(event)">
+                            <div class="bin-border" id="emptyMessage">
+                                <div class="empty-message">
+                                    <div class="empty-icon">🗑️</div>
+                                    <div>Drag materials here to start composting!</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bin-info" id="binInfo"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="popup-overlay hidden" id="popupOverlay" onclick="closePopup()">
+        <div class="popup" onclick="event.stopPropagation()">
+            <div class="popup-header">
+                <span class="popup-icon" id="popupIcon">ℹ️</span>
+                <h3 id="popupTitle">Analysis</h3>
+            </div>
+            <div class="popup-message" id="popupMessage"></div>
+            <div class="popup-recommendations" id="popupRecommendations"></div>
+            <button class="button" style="width: 100%;" onclick="closePopup()">Continue Composting</button>
+        </div>
+    </div>
+    <!--Appears once all materials have been 100% composted-->
+    <div class="popup-overlay hidden" id="victoryOverlay" onclick="closeVictory()">
+        <div class="popup victory-popup" onclick="event.stopPropagation()">
+            <div class="victory-icon">🎉🌱🏆</div>
+            <div class="victory-title">Composting Complete!</div>
+            <div class="popup-message" style="text-align: center; margin-bottom: 20px;">
+                Congratulations! You've successfully composted all your materials into rich, nutrient-dense soil
+                amendment.
+                Your garden will thank you!
+            </div>
+            <div class="victory-stats">
+                <div class="victory-stat">
+                    <span class="victory-stat-label">Time to Completion:</span>
+                    <span class="victory-stat-value" id="victoryWeeks">0 weeks</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-stat-label">Materials Composted:</span>
+                    <span class="victory-stat-value" id="victoryMaterials">0 items</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-stat-label">Final Moisture:</span>
+                    <span class="victory-stat-value" id="victoryMoisture">0%</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-stat-label">Final Temperature:</span>
+                    <span class="victory-stat-value" id="victoryTemp">0%</span>
+                </div>
+            </div>
+            <button class="button" style="width: 100%; background-color: #059669; font-size: 18px; padding: 12px;"
+                onclick="closeVictory()">
+                Start New Compost Bin
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Define the attributes of all the compost
+        const materials = [
+            {
+                id: 'twigs',
+                name: 'Twigs',
+                type: 'brown',
+                compostable: true,
+                emoji: '🌿',
+                initialPercent: 0,
+                decompRate: 2
+            },
+            {
+                id: 'newspaper',
+                name: 'Newspaper',
+                type: 'brown',
+                compostable: true,
+                emoji: '📰',
+                initialPercent: 0,
+                decompRate: 5
+            },
+            {
+                id: 'broccoli',
+                name: 'Broccoli',
+                type: 'green',
+                compostable: true,
+                emoji: '🥦',
+                initialPercent: 0,
+                decompRate: 8
+            },
+            {
+                id: 'apple',
+                name: 'Apple',
+                type: 'green',
+                compostable: true,
+                emoji: '🍎',
+                initialPercent: 0,
+                decompRate: 7
+            },
+            {
+                id: 'plastic',
+                name: 'Plastic Bag',
+                type: 'non-compostable',
+                compostable: false,
+                emoji: '🛍️',
+                initialPercent: 0,
+                decompRate: 0
+            },
+            {
+                id: 'worms',
+                name: 'Worms',
+                type: 'accelerator',
+                compostable: true,
+                emoji: '🪱',
+                initialPercent: 100,
+                decompRate: 0
+            }
+        ];
+
+        let binItems = [];                  // Empty because nothing has been put in the bin yet
+        let moisture = 50;
+        let sunlight = 50;
+        let timeAdvanced = 0;
+        let itemIdCounter = 0;
+        let hasWonThisSession = false;
+
+        // Short but sweet main function
+        function init() {
+            renderMaterials();
+            updateBinInfo();
+        }
+
+        // Logo Customization
+        function uploadLogo(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const logoDisplay = document.getElementById('logoDisplay');
+                    logoDisplay.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // The various game screens work by revealing and de-revealing layers
+        function startGame() {
+            const title = document.getElementById('gameTitle').value;
+            document.getElementById('gameHeader').textContent = title;
+            document.getElementById('titlePage').classList.remove('active');
+            document.getElementById('titlePage').style.display = 'none';
+            document.getElementById('gameScreen').classList.add('active');
+        }
+
+        function backToTitle() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('titlePage').style.display = 'flex';
+            document.getElementById('titlePage').classList.add('active');
+        }
+
+        function renderMaterials() {
+            const grid = document.getElementById('materialsGrid');
+            grid.innerHTML = '';
+
+            materials.forEach(material => {
+                const div = document.createElement('div');
+                div.className = `material-item ${material.type}`;
+                div.draggable = true;
+                div.ondragstart = (e) => dragStart(e, material);
+                div.title = material.name;
+
+                div.innerHTML = `
+                    <div class="material-emoji">${material.emoji}</div>
+                    <div class="material-name">${material.name}</div>
+                    <div class="material-percent">Start: ${material.initialPercent}%</div>
+                `;
+
+                grid.appendChild(div);
+            });
+        }
+
+        function dragStart(event, material) {
+            event.dataTransfer.setData('material', JSON.stringify(material));
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function dropItem(event) {
+            event.preventDefault();
+            const material = JSON.parse(event.dataTransfer.getData('material'));
+            const bin = document.getElementById('compostBin');
+            const rect = bin.getBoundingClientRect();
+
+            const x = event.clientX - rect.left - 30;
+            const y = event.clientY - rect.top - 30;
+            // Looks intimidating but just defines how items will be oriented in the bin once dropped
+            const newItem = {
+                ...material,
+                x: Math.max(0, Math.min(x, rect.width - 60)),
+                y: Math.max(0, Math.min(y, rect.height - 60)),
+                uniqueId: `${material.id}-${itemIdCounter++}`,
+                compostPercent: material.initialPercent
+            };
+
+            binItems.push(newItem);
+            hasWonThisSession = false;
+            renderBinItems();
+            updateBinInfo();
+        }
+
+        function removeItem(uniqueId) {
+            binItems = binItems.filter(item => item.uniqueId !== uniqueId);
+            renderBinItems();
+            updateBinInfo();
+        }
+
+        function renderBinItems() {
+            const bin = document.getElementById('compostBin');
+            const emptyMessage = document.getElementById('emptyMessage');
+
+            // Remove existing items
+            const existingItems = bin.querySelectorAll('.bin-item');
+            existingItems.forEach(item => item.remove());
+
+            if (binItems.length === 0) {
+                emptyMessage.classList.remove('hidden');
+            } else {
+                emptyMessage.classList.add('hidden');
+
+                binItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'bin-item';
+                    div.style.left = item.x + 'px';
+                    div.style.top = item.y + 'px';
+                    div.title = 'Click to remove';
+                    div.onclick = () => removeItem(item.uniqueId);
+                    div.innerHTML = `
+                        <div class="bin-item-emoji">${item.emoji}</div>
+                        <div class="bin-item-percent">${Math.round(item.compostPercent)}%</div>
+                    `;
+                    bin.appendChild(div);
+                });
+            }
+        }
+        // Essential upkeep info
+        function updateBinInfo() {
+            const info = document.getElementById('binInfo');
+            const greens = binItems.filter(item => item.type === 'green').length;
+            const browns = binItems.filter(item => item.type === 'brown').length;
+            const nonCompostable = binItems.filter(item => !item.compostable).length;
+
+            if (binItems.length === 0) {
+                info.innerHTML = '<strong>Bin Contents:</strong> Empty';
+            } else {
+                let html = `<strong>Bin Contents:</strong> ${binItems.length} items • Greens: ${greens} • Browns: ${browns}`;
+                if (nonCompostable > 0) {
+                    html += ' • <span class="warning">⚠️ Contains non-compostable items!</span>';
+                }
+                info.innerHTML = html;
+            }
+        }
+        // Both of these are sliders
+        function updateMoisture(value) {
+            moisture = parseInt(value);
+            document.getElementById('moistureValue').textContent = moisture;
+        }
+
+        function updateSunlight(value) {
+            sunlight = parseInt(value);
+            document.getElementById('sunlightValue').textContent = sunlight;
+        }
+        // Players win once everything has been 100% composted
+        function checkVictory() {
+            if (binItems.length === 0 || hasWonThisSession) return false;
+
+            const compostableItems = binItems.filter(item => item.compostable && item.id !== 'worms');
+            if (compostableItems.length === 0) return false;
+
+            const allComposted = compostableItems.every(item => item.compostPercent >= 100);
+
+            if (allComposted) {
+                hasWonThisSession = true;
+                showVictory();
+                return true;
+            }
+            return false;
+        }
+
+        function showVictory() {
+            document.getElementById('victoryWeeks').textContent = `${timeAdvanced} weeks`;
+            document.getElementById('victoryMaterials').textContent = `${binItems.length} items`;
+            document.getElementById('victoryMoisture').textContent = `${moisture}%`;
+            document.getElementById('victoryTemp').textContent = `${sunlight}%`;
+            document.getElementById('victoryOverlay').classList.remove('hidden');
+        }
+
+        function closeVictory() {
+            document.getElementById('victoryOverlay').classList.add('hidden');
+            clearBin();
+        }
+
+        // Core of the game logic; increments time by 1 week and calculates speed of composting based on various factors
+        function advanceTime() {
+            timeAdvanced++;
+            document.getElementById('weekDisplay').textContent = `Week ${timeAdvanced}`;
+
+            // Update sun position
+            const sunPosition = (timeAdvanced * 10) % 100;
+            document.getElementById('sun').style.left = sunPosition + '%';
+
+            // Update compost percentages
+            const hasWorms = binItems.some(item => item.id === 'worms');
+            const wormBonus = hasWorms ? 1.5 : 1;
+
+            binItems.forEach(item => {
+                if (item.compostable && item.id !== 'worms') {
+                    // Calculate decomposition rate based on conditions
+                    let effectiveRate = item.decompRate;
+
+                    // Moisture affects rate (optimal 40-60%)
+                    if (moisture < 30) {
+                        effectiveRate *= 0.3;
+                    } else if (moisture > 70) {
+                        effectiveRate *= 0.5;
+                    } else if (moisture >= 40 && moisture <= 60) {
+                        effectiveRate *= 1.2;
+                    }
+
+                    // Temperature affects rate (optimal 40-60%)
+                    if (sunlight < 20) {
+                        effectiveRate *= 0.4;
+                    } else if (sunlight > 80) {
+                        effectiveRate *= 0.6;
+                    } else if (sunlight >= 40 && sunlight <= 60) {
+                        effectiveRate *= 1.2;
+                    }
+
+                    // Apply worm bonus
+                    effectiveRate *= wormBonus;
+
+                    // Update percentage (cap at 100%)
+                    item.compostPercent = Math.min(100, item.compostPercent + effectiveRate);
+                }
+            });
+
+            renderBinItems();
+
+            // Check for victory before showing analysis
+            if (checkVictory()) {
+                return; // Don't show analysis popup if victory occurred
+            }
+
+            const analysis = analyzeCompost();
+            showPopup(analysis);
+        }
+
+        // Important for users to receive feedback on their compost
+        function analyzeCompost() {
+            const greens = binItems.filter(item => item.type === 'green').length;
+            const browns = binItems.filter(item => item.type === 'brown').length;
+            const nonCompostable = binItems.filter(item => !item.compostable).length;
+            const hasWorms = binItems.some(item => item.id === 'worms');
+            const totalItems = binItems.length;
+
+            if (totalItems === 0) {
+                return {
+                    status: 'empty',
+                    message: 'Your compost bin is empty! Add some organic materials to get started.',
+                    recommendations: ['Add a mix of green (nitrogen-rich) and brown (carbon-rich) materials']
+                };
+            }
+
+            let status = 'good';
+            let message = '';
+            let recommendations = [];
+
+            // Check for non-compostable items
+            if (nonCompostable > 0) {
+                status = 'problem';
+                message = `Warning: You have ${nonCompostable} non-compostable item(s) in your bin. Plastic bags and other synthetic materials will not decompose and can harm the composting process by blocking air flow and preventing proper breakdown of organic matter.`;
+                recommendations.push('Remove all non-compostable materials immediately');
+            }
+
+            // Check carbon-nitrogen balance
+            const ratio = browns > 0 ? greens / browns : greens > 0 ? Infinity : 0;
+
+            if (ratio < 0.5) {
+                if (status !== 'problem') status = 'suboptimal';
+                message += (message ? ' ' : '') + 'Too many brown materials! Your compost is carbon-heavy. With excess carbon and insufficient nitrogen, microbial activity slows dramatically. The materials will eventually decompose, but it may take many months or even years instead of weeks.';
+                recommendations.push('Add more green materials like food scraps, grass clippings, or coffee grounds to boost nitrogen levels');
+            } else if (ratio > 2) {
+                if (status !== 'problem') status = 'suboptimal';
+                message += (message ? ' ' : '') + 'Too many green materials! Your compost has excess nitrogen. This creates anaerobic conditions where beneficial aerobic bacteria cannot survive. Instead, anaerobic bacteria produce ammonia and other foul-smelling compounds, creating a slimy, smelly mess.';
+                recommendations.push('Add more brown materials like dry leaves, cardboard, or shredded paper to absorb excess moisture and balance the carbon-nitrogen ratio');
+            }
+
+            // Check moisture
+            if (moisture < 30) {
+                if (status !== 'problem') status = 'suboptimal';
+                message += (message ? ' ' : '') + 'Your compost is too dry. Microorganisms need water to survive and break down materials. Without adequate moisture, microbial activity nearly stops, and decomposition halts. The pile becomes dormant.';
+                recommendations.push('Water your compost to increase moisture to 40-60% - it should feel like a wrung-out sponge');
+            } else if (moisture > 70) {
+                if (status !== 'problem') status = 'suboptimal';
+                message += (message ? ' ' : '') + 'Your compost is too wet. Excess water fills air pockets, creating anaerobic (oxygen-free) conditions. Beneficial aerobic bacteria die off and are replaced by anaerobic bacteria that produce hydrogen sulfide (rotten egg smell) and methane.';
+                recommendations.push('Add dry brown materials like shredded paper or sawdust, and turn the pile to incorporate air and help moisture evaporate');
+            }
+
+            // Check sunlight/temperature
+            if (sunlight < 20) {
+                if (status !== 'problem') status = 'suboptimal';
+                message += (message ? ' ' : '') + 'Low temperature is significantly slowing decomposition. Below 40°F (4°C), most composting microorganisms become dormant. The pile may freeze in winter, completely halting the process until temperatures rise.';
+                recommendations.push('Move to a sunnier location or insulate the bin to maintain optimal temperatures of 90-140°F (32-60°C)');
+            } else if (sunlight > 80) {
+                if (status !== 'problem') status = 'suboptimal';
+                message += (message ? ' ' : '') + 'High temperature may kill beneficial microorganisms. Above 160°F (71°C), even thermophilic (heat-loving) bacteria begin to die. Excessive heat can also dry out the pile rapidly.';
+                recommendations.push('Provide shade, turn the pile to release heat, and monitor moisture levels carefully');
+            }
+
+            // Positive feedback for good conditions
+            if (status === 'good') {
+                message = 'Excellent! Your compost has a good balance of materials and environmental conditions. ';
+
+                if (hasWorms) {
+                    message += 'The earthworms are actively aerating the pile and breaking down organic matter. Their castings (worm poop) are rich in beneficial nutrients and microorganisms. ';
+                }
+
+                message += `After ${timeAdvanced} ${timeAdvanced === 1 ? 'week' : 'weeks'}, `;
+
+                if (timeAdvanced > 12) {
+                    message += 'your compost should be fully matured - dark, crumbly, and earthy-smelling. The original materials are no longer recognizable. This finished compost is ready to enrich your garden soil!';
+                } else if (timeAdvanced > 8) {
+                    message += 'your materials are well-decomposed. Most items should be breaking down nicely, though some woody materials may need more time. The pile is in the curing phase.';
+                } else if (timeAdvanced > 4) {
+                    message += 'you can see significant breakdown of the organic materials. The thermophilic (heat-loving) bacteria have likely heated the pile, accelerating decomposition and killing weed seeds and pathogens.';
+                } else {
+                    message += 'the decomposition process is actively underway. Mesophilic bacteria are beginning to colonize the materials, starting the breakdown process.';
+                }
+            }
+
+            // Worm benefits
+            if (hasWorms && status !== 'problem' && recommendations.length < 3) {
+                recommendations.push('Great job adding worms! They accelerate decomposition by 50% and improve compost structure');
+            }
+
+            return { status, message, recommendations };
+        }
+
+        // Core feedback mechanism
+        function showPopup(analysis) {
+            const overlay = document.getElementById('popupOverlay');
+            const icon = document.getElementById('popupIcon');
+            const title = document.getElementById('popupTitle');
+            const message = document.getElementById('popupMessage');
+            const recsDiv = document.getElementById('popupRecommendations');
+
+            overlay.classList.remove('hidden');
+
+            if (analysis.status === 'problem') {
+                icon.textContent = '🚨';
+            } else if (analysis.status === 'suboptimal') {
+                icon.textContent = '⚠️';
+            } else {
+                icon.textContent = '✅';
+            }
+
+            title.textContent = `Week ${timeAdvanced} - Compost Analysis`;
+            message.textContent = analysis.message;
+
+            if (analysis.recommendations && analysis.recommendations.length > 0) {
+                recsDiv.innerHTML = `
+                    <h4>Recommendations:</h4>
+                    <ul>
+                        ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                `;
+                recsDiv.classList.remove('hidden');
+            } else {
+                recsDiv.classList.add('hidden');
+            }
+        }
+
+        function closePopup() {
+            document.getElementById('popupOverlay').classList.add('hidden');
+        }
+
+        function clearBin() {
+            binItems = [];
+            timeAdvanced = 0;
+            hasWonThisSession = false;
+            document.getElementById('weekDisplay').textContent = 'Week 0';
+            document.getElementById('sun').style.left = '0%';
+            renderBinItems();
+            updateBinInfo();
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+
+</html>
